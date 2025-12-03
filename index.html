@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Meme Yevhen — Menu</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #101010;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .menu-container {
+        text-align: center;
+    }
+
+    h1 {
+        font-size: 52px;
+        margin-bottom: 40px;
+        color: #ffea00;
+        text-shadow: 0 0 15px #ffe600;
+    }
+
+    button {
+        display: block;
+        width: 260px;
+        padding: 16px;
+        margin: 15px auto;
+        font-size: 22px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        background: #2b2b2b;
+        color: #fff;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background: #3d3d3d;
+        transform: scale(1.05);
+    }
+
+    #settingsMenu {
+        display: none;
+        margin-top: 20px;
+    }
+
+    select {
+        padding: 12px;
+        border-radius: 10px;
+        background: #2b2b2b;
+        color: white;
+        font-size: 18px;
+        border: none;
+    }
+
+    .back-btn {
+        margin-top: 25px;
+        background: #444;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="menu-container" id="mainMenu">
+    <h1>Meme Yevhen</h1>
+    <button onclick="startGame()">▶ Start</button>
+    <button onclick="openSettings()">⚙ Settings</button>
+    <button onclick="exitGame()">❌ Exit</button>
+</div>
+
+<div class="menu-container" id="settingsMenu">
+    <h1>Settings</h1>
+
+    <label style="font-size:22px;">Language:</label><br><br>
+    <select id="langSelect">
+        <option value="ru">Русский</option>
+        <option value="da">Dansk</option>
+        <option value="en">English</option>
+        <option value="cn">中文</option>
+        <option value="de">Deutsch</option>
+    </select>
+
+    <button class="back-btn" onclick="closeSettings()">⬅ Back</button>
+</div>
+
+<script>
+function startGame() {
+    alert("Здесь позже будет игра 😎");
+}
+
+function openSettings() {
+    document.getElementById("mainMenu").style.display = "none";
+    document.getElementById("settingsMenu").style.display = "block";
+}
+
+function closeSettings() {
+    document.getElementById("settingsMenu").style.display = "none";
+    document.getElementById("mainMenu").style.display = "block";
+}
+
+function exitGame() {
+    alert("Браузер закрыть нельзя 😭");
+}
+</script>
+
+</body>
+</html>
