@@ -1,203 +1,220 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <title>Browser Byppas (by yev)</title>
-  <meta name="description" content="Легкий просмотр сайтов во фрейме там, где это разрешено.">
-  <style>
-    :root {
-      color-scheme: light dark;
-      --bg: #0f1216; --fg: #e6e6e6; --accent: #6fb3ff; --muted: #9aa4af;
-      --card: #171b21; --border: #263042;
-    }
-    @media (prefers-color-scheme: light) {
-      :root { --bg:#f7f8fb; --fg:#111; --accent:#2b6fff; --muted:#56606b; --card:#fff; --border:#e5e8ef; }
-    }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-      background:var(--bg); color:var(--fg); }
-    header { position:sticky; top:0; z-index:10; background:var(--card); border-bottom:1px solid var(--border); }
-    .wrap { max-width:1100px; margin:0 auto; padding:12px 16px; }
-    h1 { margin:0 0 8px; font-size:1.15rem; letter-spacing:0.2px; }
-    .bar { display:flex; gap:8px; flex-wrap:wrap; }
-    input[type="url"] { flex:1; min-width:220px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:transparent; color:inherit; }
-    button { padding:10px 14px; border:1px solid var(--border); border-radius:10px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
-    button.secondary { background:transparent; color:inherit; }
-    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .presets { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-    .chip { border:1px solid var(--border); border-radius:999px; padding:6px 10px; cursor:pointer; color:var(--muted); background:transparent; }
-    .chip:hover { color:inherit; border-color:var(--accent); }
-    .status { font-size:0.9rem; color:var(--muted); margin-left:auto; }
-    main { height:calc(100vh - 132px); }
-    .frameWrap { width:100%; height:100%; }
-    iframe { width:100%; height:100%; border:0; background:var(--card); }
-    .notice { padding:12px 16px; background:var(--card); border-top:1px solid var(--border); color:var(--muted); font-size:0.95rem; }
-    .actions { display:flex; gap:10px; align-items:center; margin-top:8px; }
-    .hidden { display:none !important; }
-    .footer { font-size:0.85rem; color:var(--muted); padding:10px 16px; }
-    @media (max-width:640px) { main { height:calc(100vh - 160px); } }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="wrap">
-      <h1>Browser Byppas (by yev)</h1>
-      <div class="bar">
-        <input id="urlInput" type="url" inputmode="url" placeholder="Введите ссылку (например: example.com или https://example.com)">
-        <button id="openBtn">Открыть</button>
-        <button id="newTabBtn" class="secondary">В новой вкладке</button>
-        <span id="status" class="status">Готово</span>
-      </div>
-      <div class="presets" id="presets"></div>
-    </div>
-  </header>
+<!-- Tycoon Mini Game: вставь этот блок в конец index.html перед </body> -->
+<style>
+  /* Tycoon styles */
+  #tycoonWrap { position: fixed; right: 18px; bottom: 18px; width: 360px; max-width: 92vw; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.04); padding: 12px; border-radius: 10px; color: #eee; font-family: "Segoe UI", Arial; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+  #tycoonHeader { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  #tycoonHeader h3 { margin:0; color:#00ffcc; font-size:16px; }
+  #tycoonMain { display:flex; gap:10px; }
+  #tycoonLeft { flex:1; display:flex; flex-direction:column; gap:8px; }
+  #tycoonRight { width:140px; display:flex; flex-direction:column; gap:8px; }
+  .tyCoin { font-size:20px; font-weight:800; color:#ffd166; }
+  .tyBtn { background:#111; border:1px solid rgba(255,255,255,0.04); color:#fff; padding:8px; border-radius:8px; cursor:pointer; font-weight:700; }
+  .tyBtn:disabled { opacity:0.45; cursor:not-allowed; }
+  .upgrade { background:#0f0f0f; border-radius:8px; padding:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.03); }
+  .small { font-size:12px; color:#9aa0a6; }
+  .leader { background:#0b0b0b; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); font-size:13px; }
+  .tyFooter { margin-top:8px; display:flex; gap:8px; justify-content:space-between; align-items:center; }
+  .closeTy { background:transparent; border:none; color:#888; cursor:pointer; font-size:14px; }
+</style>
 
-  <main>
-    <div class="frameWrap">
-      <iframe id="viewer"
-        sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-        allow="geolocation; microphone; camera; clipboard-read; clipboard-write; autoplay"
-        referrerpolicy="no-referrer"
-        srcdoc="<!doctype html><html><head><meta charset='utf-8'><style>
-          body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#111;color:#bbb}
-          .box{max-width:42ch;text-align:center}
-          h2{color:#fff;margin-bottom:8px}
-        </style></head><body><div class='box'>
-          <h2>Здесь появится сайт</h2>
-          <p>Введите ссылку выше или выберите пресет. Если сайт не разрешает просмотр во фрейме, используйте «В новой вкладке».</p>
-        </div></body></html>">
-      </iframe>
-    </div>
-  </main>
+<div id="tycoonWrap" aria-live="polite">
+  <div id="tycoonHeader">
+    <h3>School Tycoon</h3>
+    <div class="small">earn coins • buy upgrades</div>
+    <button class="closeTy" id="tyClose" title="Hide">✕</button>
+  </div>
 
-  <div class="notice">
-    <div class="wrap">
-      <div class="row">
+  <div id="tycoonMain">
+    <div id="tycoonLeft">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <strong>Подсказка:</strong> Некоторые сайты блокируют показ во фрейме через X-Frame-Options или Content-Security-Policy. В таком случае используйте кнопку «В новой вкладке».
+          <div class="small">Coins</div>
+          <div class="tyCoin" id="tyCoins">0</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="small">Per click</div>
+          <div id="tyPerClick" style="font-weight:800;color:#fff">1</div>
         </div>
       </div>
-      <div class="actions">
-        <button id="retryBtn" class="secondary hidden">Повторить загрузку</button>
-        <button id="fallbackOpenBtn" class="secondary hidden">Открыть в новой вкладке</button>
-        <span id="hint" class="status"></span>
+
+      <button id="tyClick" class="tyBtn" style="font-size:18px;padding:12px;border-radius:10px;">Click to earn</button>
+
+      <div style="margin-top:6px;">
+        <div class="small">Upgrades</div>
+        <div id="upgradesList" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div id="tycoonRight">
+      <div class="small">Auto income</div>
+      <div id="tyAuto" style="font-weight:800;color:#ffd166">0 / min</div>
+
+      <div style="margin-top:8px;">
+        <div class="small">Leader board</div>
+        <div id="tyLeaders" class="leader">No scores yet</div>
+      </div>
+
+      <div style="margin-top:auto;">
+        <button id="tyReset" class="tyBtn" style="background:#3a0b0b">Reset</button>
       </div>
     </div>
   </div>
 
-  <div class="footer wrap">
-    Сделано для GitHub Pages. Без серверного байпаса, с максимумом возможного на стороне фронтенда.
+  <div class="tyFooter">
+    <div class="small">Points saved locally</div>
+    <div>
+      <button id="tySaveScore" class="tyBtn" style="padding:6px 10px;font-size:13px">Save score</button>
+    </div>
   </div>
+</div>
 
-  <script>
-    // Простая нормализация и проверка URL
-    function normalizeUrl(raw) {
-      const s = String(raw || '').trim();
-      if (!s) return '';
-      try {
-        // Добавляем схему, если отсутствует
-        const withScheme = /^https?:\/\//i.test(s) ? s : 'https://' + s;
-        const url = new URL(withScheme);
-        return url.href;
-      } catch {
-        return '';
-      }
+<script>
+(function(){
+  // State
+  const STORAGE_KEY = 'school_tycoon_v1';
+  const LEAD_KEY = 'school_tycoon_leaders_v1';
+  let state = {
+    coins: 0,
+    perClick: 1,
+    autoPerMin: 0,
+    upgrades: {
+      clickBoost: { level:0, baseCost: 20, multiplier: 1.5 }, // increases perClick
+      autoGen: { level:0, baseCost: 50, perMin: 1 } // increases autoPerMin
     }
+  };
 
-    // Пресеты (сайты, которые часто разрешают iframe)
-    const PRESETS = [
-      { label: 'example.com', url: 'https://example.com' },
-      { label: 'Wikipedia', url: 'https://wikipedia.org' },
-      { label: 'MDN Web Docs', url: 'https://developer.mozilla.org' },
-      { label: 'GitHub', url: 'https://github.com' },
-      { label: 'Hacker News (classic)', url: 'https://news.ycombinator.com' }
-    ];
+  // DOM
+  const elCoins = document.getElementById('tyCoins');
+  const elPerClick = document.getElementById('tyPerClick');
+  const elClick = document.getElementById('tyClick');
+  const elUpgrades = document.getElementById('upgradesList');
+  const elAuto = document.getElementById('tyAuto');
+  const elLeaders = document.getElementById('tyLeaders');
+  const elReset = document.getElementById('tyReset');
+  const elSave = document.getElementById('tySaveScore');
+  const elClose = document.getElementById('tyClose');
 
-    const urlInput = document.getElementById('urlInput');
-    const viewer = document.getElementById('viewer');
-    const statusEl = document.getElementById('status');
-    const retryBtn = document.getElementById('retryBtn');
-    const fallbackOpenBtn = document.getElementById('fallbackOpenBtn');
-    const hintEl = document.getElementById('hint');
-    const openBtn = document.getElementById('openBtn');
-    const newTabBtn = document.getElementById('newTabBtn');
-    const presetsEl = document.getElementById('presets');
+  // Load
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) state = JSON.parse(raw);
+    }catch(e){}
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
 
-    // Рендер пресетов
-    PRESETS.forEach(p => {
-      const b = document.createElement('button');
-      b.className = 'chip';
-      b.textContent = p.label;
-      b.addEventListener('click', () => {
-        urlInput.value = p.url;
-        loadInFrame(p.url);
-      });
-      presetsEl.appendChild(b);
+  // Helpers
+  function format(n){ return Math.floor(n).toLocaleString(); }
+  function upgradeCost(base, level){ return Math.ceil(base * Math.pow(1.6, level)); }
+
+  // Render
+  function render(){
+    elCoins.textContent = format(state.coins);
+    elPerClick.textContent = format(state.perClick);
+    elAuto.textContent = format(state.autoPerMin) + ' / min';
+
+    // upgrades
+    elUpgrades.innerHTML = '';
+    // click boost
+    const cb = state.upgrades.clickBoost;
+    const cbCost = upgradeCost(cb.baseCost, cb.level);
+    const cbDiv = document.createElement('div');
+    cbDiv.className = 'upgrade';
+    cbDiv.innerHTML = `<div><div style="font-weight:800">Click Boost</div><div class="small">Level ${cb.level} — +${(cb.level*1).toFixed(0)} per click</div></div>
+      <div style="text-align:right"><div class="small">Cost</div><div style="font-weight:800">${format(cbCost)}</div><button class="tyBtn" data-up="clickBoost" style="margin-top:6px">Buy</button></div>`;
+    elUpgrades.appendChild(cbDiv);
+
+    // auto gen
+    const ag = state.upgrades.autoGen;
+    const agCost = upgradeCost(ag.baseCost, ag.level);
+    const agDiv = document.createElement('div');
+    agDiv.className = 'upgrade';
+    agDiv.innerHTML = `<div><div style="font-weight:800">Auto Generator</div><div class="small">Level ${ag.level} — +${ag.level*ag.perMin} / min</div></div>
+      <div style="text-align:right"><div class="small">Cost</div><div style="font-weight:800">${format(agCost)}</div><button class="tyBtn" data-up="autoGen" style="margin-top:6px">Buy</button></div>`;
+    elUpgrades.appendChild(agDiv);
+
+    // attach buy handlers
+    elUpgrades.querySelectorAll('button[data-up]').forEach(btn=>{
+      btn.onclick = ()=>{ buyUpgrade(btn.getAttribute('data-up')); };
     });
 
-    // Основная загрузка во фрейме + механизм подсказок
-    let loadTimer = null;
-    function loadInFrame(rawUrl) {
-      const url = normalizeUrl(rawUrl);
-      if (!url) {
-        statusEl.textContent = 'Некорректная ссылка';
-        hintEl.textContent = 'Проверь формат: https://домен/путь';
-        retryBtn.classList.add('hidden');
-        fallbackOpenBtn.classList.add('hidden');
-        return;
-      }
-      statusEl.textContent = 'Загрузка...';
-      hintEl.textContent = '';
-      retryBtn.classList.add('hidden');
-      fallbackOpenBtn.classList.add('hidden');
+    // leaders
+    renderLeaders();
+    save();
+  }
 
-      // Старт таймера на случай блокировки во фрейме
-      if (loadTimer) clearTimeout(loadTimer);
-      loadTimer = setTimeout(() => {
-        statusEl.textContent = 'Возможно, сайт блокирует показ во фрейме';
-        hintEl.textContent = 'Попробуйте «В новой вкладке».';
-        retryBtn.classList.remove('hidden');
-        fallbackOpenBtn.classList.remove('hidden');
-      }, 5200);
-
-      // Устанавливаем src. Если загрузится — обновим статус по событию load
-      viewer.src = url;
+  // Buy upgrade
+  function buyUpgrade(key){
+    if(key === 'clickBoost'){
+      const u = state.upgrades.clickBoost;
+      const cost = upgradeCost(u.baseCost, u.level);
+      if(state.coins < cost) return;
+      state.coins -= cost;
+      u.level += 1;
+      // increase perClick: base 1 + level*1
+      state.perClick = 1 + u.level * 1;
+    } else if(key === 'autoGen'){
+      const u = state.upgrades.autoGen;
+      const cost = upgradeCost(u.baseCost, u.level);
+      if(state.coins < cost) return;
+      state.coins -= cost;
+      u.level += 1;
+      state.autoPerMin = u.level * u.perMin;
     }
+    render();
+  }
 
-    // Событие успешной загрузки (не работает для всех доменов, но достаточно как сигнал)
-    viewer.addEventListener('load', () => {
-      if (loadTimer) clearTimeout(loadTimer);
-      statusEl.textContent = 'Готово';
-      hintEl.textContent = '';
-      retryBtn.classList.add('hidden');
-      fallbackOpenBtn.classList.add('hidden');
-    });
+  // Click handler
+  elClick.onclick = ()=>{
+    state.coins += state.perClick;
+    render();
+  };
 
-    // Кнопки
-    openBtn.addEventListener('click', () => loadInFrame(urlInput.value));
-    urlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') loadInFrame(urlInput.value);
-    });
+  // Auto income tick (every second, distribute per minute)
+  setInterval(()=>{
+    if(state.autoPerMin > 0){
+      const perSec = state.autoPerMin / 60;
+      state.coins += perSec;
+      // avoid float drift by rounding occasionally
+    }
+    // update display frequently but not too heavy
+    elCoins.textContent = format(state.coins);
+  }, 1000);
 
-    newTabBtn.addEventListener('click', () => {
-      const url = normalizeUrl(urlInput.value);
-      if (!url) {
-        statusEl.textContent = 'Некорректная ссылка';
-        return;
-      }
-      window.open(url, '_blank', 'noopener,noreferrer');
-    });
+  // Save score to local leaderboard
+  function saveScore(){
+    const name = prompt('Enter name for leaderboard (max 12 chars):','You');
+    if(!name) return;
+    const leaders = JSON.parse(localStorage.getItem(LEAD_KEY) || '[]');
+    leaders.push({ name: name.slice(0,12), score: Math.floor(state.coins), time: Date.now() });
+    // sort desc and keep top 10
+    leaders.sort((a,b)=>b.score - a.score);
+    localStorage.setItem(LEAD_KEY, JSON.stringify(leaders.slice(0,10)));
+    renderLeaders();
+    alert('Score saved locally.');
+  }
 
-    retryBtn.addEventListener('click', () => {
-      loadInFrame(urlInput.value);
-    });
+  function renderLeaders(){
+    const leaders = JSON.parse(localStorage.getItem(LEAD_KEY) || '[]');
+    if(!leaders.length){ elLeaders.textContent = 'No scores yet'; return; }
+    elLeaders.innerHTML = leaders.slice(0,5).map((l,i)=>`${i+1}. ${l.name} — ${l.score}`).join('<br>');
+  }
 
-    fallbackOpenBtn.addEventListener('click', () => {
-      const url = normalizeUrl(urlInput.value);
-      if (url) window.open(url, '_blank', 'noopener,noreferrer');
-    });
-  </script>
-</body>
-</html>
+  // Reset
+  elReset.onclick = ()=>{
+    if(!confirm('Reset your tycoon progress?')) return;
+    state = { coins:0, perClick:1, autoPerMin:0, upgrades: { clickBoost:{level:0,baseCost:20,multiplier:1.5}, autoGen:{level:0,baseCost:50,perMin:1} } };
+    save();
+    render();
+  };
+
+  elSave.onclick = saveScore;
+  elClose.onclick = ()=>{ document.getElementById('tycoonWrap').style.display = 'none'; };
+
+  // init
+  load();
+  render();
+})();
+</script>
