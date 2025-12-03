@@ -1,37 +1,203 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Yevhen Byppas</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Browser Byppas (by yev)</title>
+  <meta name="description" content="Легкий просмотр сайтов во фрейме там, где это разрешено.">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1216; --fg: #e6e6e6; --accent: #6fb3ff; --muted: #9aa4af;
+      --card: #171b21; --border: #263042;
+    }
+    @media (prefers-color-scheme: light) {
+      :root { --bg:#f7f8fb; --fg:#111; --accent:#2b6fff; --muted:#56606b; --card:#fff; --border:#e5e8ef; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      background:var(--bg); color:var(--fg); }
+    header { position:sticky; top:0; z-index:10; background:var(--card); border-bottom:1px solid var(--border); }
+    .wrap { max-width:1100px; margin:0 auto; padding:12px 16px; }
+    h1 { margin:0 0 8px; font-size:1.15rem; letter-spacing:0.2px; }
+    .bar { display:flex; gap:8px; flex-wrap:wrap; }
+    input[type="url"] { flex:1; min-width:220px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:transparent; color:inherit; }
+    button { padding:10px 14px; border:1px solid var(--border); border-radius:10px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+    button.secondary { background:transparent; color:inherit; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .presets { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .chip { border:1px solid var(--border); border-radius:999px; padding:6px 10px; cursor:pointer; color:var(--muted); background:transparent; }
+    .chip:hover { color:inherit; border-color:var(--accent); }
+    .status { font-size:0.9rem; color:var(--muted); margin-left:auto; }
+    main { height:calc(100vh - 132px); }
+    .frameWrap { width:100%; height:100%; }
+    iframe { width:100%; height:100%; border:0; background:var(--card); }
+    .notice { padding:12px 16px; background:var(--card); border-top:1px solid var(--border); color:var(--muted); font-size:0.95rem; }
+    .actions { display:flex; gap:10px; align-items:center; margin-top:8px; }
+    .hidden { display:none !important; }
+    .footer { font-size:0.85rem; color:var(--muted); padding:10px 16px; }
+    @media (max-width:640px) { main { height:calc(100vh - 160px); } }
+  </style>
 </head>
 <body>
-
-<div id="rules-overlay">
-    <div class="rules-box">
-        <h2>Yevhen Byppas — Rules</h2>
-        <p>
-            This project is made only for UI demonstration.<br>
-            No bypassing, no VPN, no proxy, no exploiting.<br><br>
-            ❗ Any attempt to use this site for breaking school rules = BAN.<br><br>
-            Click **Accept** to continue.
-        </p>
-        <button id="accept-rules">Accept</button>
+  <header>
+    <div class="wrap">
+      <h1>Browser Byppas (by yev)</h1>
+      <div class="bar">
+        <input id="urlInput" type="url" inputmode="url" placeholder="Введите ссылку (например: example.com или https://example.com)">
+        <button id="openBtn">Открыть</button>
+        <button id="newTabBtn" class="secondary">В новой вкладке</button>
+        <span id="status" class="status">Готово</span>
+      </div>
+      <div class="presets" id="presets"></div>
     </div>
-</div>
+  </header>
 
-<div class="center">
-    <img src="https://cdn-icons-png.flaticon.com/512/565/565547.png" class="incognito">
-    <h1>Yevhen Byppas</h1>
-
-    <div class="search-box">
-        <input type="text" id="url-input" placeholder="Enter URL (only allowed websites)">
-        <button id="go-btn">Go</button>
+  <main>
+    <div class="frameWrap">
+      <iframe id="viewer"
+        sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+        allow="geolocation; microphone; camera; clipboard-read; clipboard-write; autoplay"
+        referrerpolicy="no-referrer"
+        srcdoc="<!doctype html><html><head><meta charset='utf-8'><style>
+          body{font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#111;color:#bbb}
+          .box{max-width:42ch;text-align:center}
+          h2{color:#fff;margin-bottom:8px}
+        </style></head><body><div class='box'>
+          <h2>Здесь появится сайт</h2>
+          <p>Введите ссылку выше или выберите пресет. Если сайт не разрешает просмотр во фрейме, используйте «В новой вкладке».</p>
+        </div></body></html>">
+      </iframe>
     </div>
-</div>
+  </main>
 
-<iframe id="webframe" src=""></iframe>
+  <div class="notice">
+    <div class="wrap">
+      <div class="row">
+        <div>
+          <strong>Подсказка:</strong> Некоторые сайты блокируют показ во фрейме через X-Frame-Options или Content-Security-Policy. В таком случае используйте кнопку «В новой вкладке».
+        </div>
+      </div>
+      <div class="actions">
+        <button id="retryBtn" class="secondary hidden">Повторить загрузку</button>
+        <button id="fallbackOpenBtn" class="secondary hidden">Открыть в новой вкладке</button>
+        <span id="hint" class="status"></span>
+      </div>
+    </div>
+  </div>
 
-<script src="script.js"></script>
+  <div class="footer wrap">
+    Сделано для GitHub Pages. Без серверного байпаса, с максимумом возможного на стороне фронтенда.
+  </div>
+
+  <script>
+    // Простая нормализация и проверка URL
+    function normalizeUrl(raw) {
+      const s = String(raw || '').trim();
+      if (!s) return '';
+      try {
+        // Добавляем схему, если отсутствует
+        const withScheme = /^https?:\/\//i.test(s) ? s : 'https://' + s;
+        const url = new URL(withScheme);
+        return url.href;
+      } catch {
+        return '';
+      }
+    }
+
+    // Пресеты (сайты, которые часто разрешают iframe)
+    const PRESETS = [
+      { label: 'example.com', url: 'https://example.com' },
+      { label: 'Wikipedia', url: 'https://wikipedia.org' },
+      { label: 'MDN Web Docs', url: 'https://developer.mozilla.org' },
+      { label: 'GitHub', url: 'https://github.com' },
+      { label: 'Hacker News (classic)', url: 'https://news.ycombinator.com' }
+    ];
+
+    const urlInput = document.getElementById('urlInput');
+    const viewer = document.getElementById('viewer');
+    const statusEl = document.getElementById('status');
+    const retryBtn = document.getElementById('retryBtn');
+    const fallbackOpenBtn = document.getElementById('fallbackOpenBtn');
+    const hintEl = document.getElementById('hint');
+    const openBtn = document.getElementById('openBtn');
+    const newTabBtn = document.getElementById('newTabBtn');
+    const presetsEl = document.getElementById('presets');
+
+    // Рендер пресетов
+    PRESETS.forEach(p => {
+      const b = document.createElement('button');
+      b.className = 'chip';
+      b.textContent = p.label;
+      b.addEventListener('click', () => {
+        urlInput.value = p.url;
+        loadInFrame(p.url);
+      });
+      presetsEl.appendChild(b);
+    });
+
+    // Основная загрузка во фрейме + механизм подсказок
+    let loadTimer = null;
+    function loadInFrame(rawUrl) {
+      const url = normalizeUrl(rawUrl);
+      if (!url) {
+        statusEl.textContent = 'Некорректная ссылка';
+        hintEl.textContent = 'Проверь формат: https://домен/путь';
+        retryBtn.classList.add('hidden');
+        fallbackOpenBtn.classList.add('hidden');
+        return;
+      }
+      statusEl.textContent = 'Загрузка...';
+      hintEl.textContent = '';
+      retryBtn.classList.add('hidden');
+      fallbackOpenBtn.classList.add('hidden');
+
+      // Старт таймера на случай блокировки во фрейме
+      if (loadTimer) clearTimeout(loadTimer);
+      loadTimer = setTimeout(() => {
+        statusEl.textContent = 'Возможно, сайт блокирует показ во фрейме';
+        hintEl.textContent = 'Попробуйте «В новой вкладке».';
+        retryBtn.classList.remove('hidden');
+        fallbackOpenBtn.classList.remove('hidden');
+      }, 5200);
+
+      // Устанавливаем src. Если загрузится — обновим статус по событию load
+      viewer.src = url;
+    }
+
+    // Событие успешной загрузки (не работает для всех доменов, но достаточно как сигнал)
+    viewer.addEventListener('load', () => {
+      if (loadTimer) clearTimeout(loadTimer);
+      statusEl.textContent = 'Готово';
+      hintEl.textContent = '';
+      retryBtn.classList.add('hidden');
+      fallbackOpenBtn.classList.add('hidden');
+    });
+
+    // Кнопки
+    openBtn.addEventListener('click', () => loadInFrame(urlInput.value));
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') loadInFrame(urlInput.value);
+    });
+
+    newTabBtn.addEventListener('click', () => {
+      const url = normalizeUrl(urlInput.value);
+      if (!url) {
+        statusEl.textContent = 'Некорректная ссылка';
+        return;
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    });
+
+    retryBtn.addEventListener('click', () => {
+      loadInFrame(urlInput.value);
+    });
+
+    fallbackOpenBtn.addEventListener('click', () => {
+      const url = normalizeUrl(urlInput.value);
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    });
+  </script>
 </body>
 </html>
