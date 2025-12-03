@@ -1,282 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Yevhen Crypto Miner</title>
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #101010;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    height: 100vh;
-}
-h1 {
-    font-size: 48px;
-    margin-bottom: 20px;
-    text-shadow: 0 0 15px #ffea00;
-    animation: pulse 2s infinite;
-}
-@keyframes pulse {
-    0%,100% { text-shadow: 0 0 15px #ffea00; }
-    50% { text-shadow: 0 0 40px #ffea00; }
-}
-button {
-    padding: 12px 24px;
-    margin: 8px;
-    font-size: 20px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #2b2b2b;
-    color: #fff;
-    transition: 0.2s;
-}
-button:hover {
-    background: #3d3d3d;
-    transform: scale(1.05);
-}
-#menu, #settings, #game {
-    display: none;
-}
-#menu.active, #settings.active, #game.active {
-    display: block;
-}
-#stats {
-    margin-top: 20px;
-    text-align: left;
-}
-.progress-bar {
-    width: 200px;
-    height: 20px;
-    background: #444;
-    border-radius: 8px;
-    margin: 4px 0;
-    overflow: hidden;
-}
-.progress-fill {
-    height: 100%;
-    background: #29faff;
-    width: 0%;
-}
-.platform {
-    margin-top: 20px;
-}
-.slot {
-    display: inline-block;
-    width: 60px;
-    height: 60px;
-    background: #2b2b2b;
-    border: 2px solid #555;
-    margin: 4px;
-    border-radius: 8px;
-    position: relative;
-}
-.gpu {
-    width: 40px;
-    height: 40px;
-    background: #ff2954;
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    border-radius: 6px;
-}
-.generator {
-    width: 60px;
-    height: 60px;
-    background: #5b2cff;
-    display: inline-block;
-    margin: 4px;
-    border-radius: 8px;
-    text-align: center;
-    line-height: 60px;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Yevhen Byppas</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="menu" class="active">
-    <h1>Yevhen Crypto Miner</h1>
-    <button onclick="startGame()">▶ Start</button>
-    <button onclick="openSettings()">⚙ Settings</button>
-</div>
-
-<div id="settings">
-    <h1>Settings</h1>
-    <label>Language:</label>
-    <select id="langSelect">
-        <option value="en" selected>English</option>
-        <option value="ru">Русский</option>
-        <option value="da">Dansk</option>
-        <option value="cn">中文</option>
-        <option value="de">Deutsch</option>
-    </select>
-    <br><br>
-    <button onclick="backToMenu()">⬅ Back</button>
-</div>
-
-<div id="game">
-    <h1>Yevhen Crypto Miner</h1>
-    <div>
-        <button onclick="buyGPU()">Buy GPU ($200)</button>
-        <button onclick="buyGenerator()">Buy Generator ($350)</button>
-        <button onclick="upgradePlatform()">Upgrade Platform ($10k)</button>
-        <button onclick="sellBTC()">Bank / Sell BTC</button>
+<div id="rules-overlay">
+    <div class="rules-box">
+        <h2>Yevhen Byppas — Rules</h2>
+        <p>
+            This project is made only for UI demonstration.<br>
+            No bypassing, no VPN, no proxy, no exploiting.<br><br>
+            ❗ Any attempt to use this site for breaking school rules = BAN.<br><br>
+            Click **Accept** to continue.
+        </p>
+        <button id="accept-rules">Accept</button>
     </div>
-
-    <div id="stats">
-        <p>Money: $<span id="money">100</span></p>
-        <p>BTC: <span id="btc">0</span></p>
-        <p>Platform Slots: <span id="platformSlots">3</span></p>
-        <p>Used Slots: <span id="usedSlots">0</span></p>
-        <p>Total Energy: <span id="totalEnergy">0</span></p>
-        <p>Used Energy: <span id="usedEnergy">0</span></p>
-    </div>
-
-    <div class="platform" id="platform"></div>
-    <div class="generators" id="generators"></div>
 </div>
 
-<script>
-// ----- GAME DATA -----
-let money = 100;
-let btc = 0;
+<div class="center">
+    <img src="https://cdn-icons-png.flaticon.com/512/565/565547.png" class="incognito">
+    <h1>Yevhen Byppas</h1>
 
-let platformLevel = 1;
-let platformSlots = 3;
-let usedSlots = 0;
+    <div class="search-box">
+        <input type="text" id="url-input" placeholder="Enter URL (only allowed websites)">
+        <button id="go-btn">Go</button>
+    </div>
+</div>
 
-let gpus = [];
-let gpuCost = 200;
-let gpuIncome = 3.5;
-let gpuEnergy = 100;
+<iframe id="webframe" src=""></iframe>
 
-let generators = [];
-let generatorCost = 350;
-let generatorEnergy = 600;
-
-let totalEnergy = 0;
-let usedEnergy = 0;
-
-// ----- MENU -----
-function startGame() {
-    document.getElementById("menu").classList.remove("active");
-    document.getElementById("game").classList.add("active");
-    updateStats();
-    gameLoop();
-}
-
-function openSettings() {
-    document.getElementById("menu").classList.remove("active");
-    document.getElementById("settings").classList.add("active");
-}
-
-function backToMenu() {
-    document.getElementById("settings").classList.remove("active");
-    document.getElementById("menu").classList.add("active");
-}
-
-// ----- GAME FUNCTIONS -----
-function buyGPU() {
-    if (money >= gpuCost && usedSlots < platformSlots) {
-        money -= gpuCost;
-        gpus.push({energy: gpuEnergy, active: true});
-        usedSlots++;
-        updateStats();
-        renderPlatform();
-    } else {
-        alert("Not enough money or platform slots!");
-    }
-}
-
-function buyGenerator() {
-    if (money >= generatorCost) {
-        money -= generatorCost;
-        generators.push({energy: generatorEnergy});
-        calculateEnergy();
-        updateStats();
-        renderGenerators();
-    } else {
-        alert("Not enough money!");
-    }
-}
-
-function upgradePlatform() {
-    if (money >= 10000) {
-        money -= 10000;
-        platformLevel++;
-        platformSlots += 5;
-        updateStats();
-    } else {
-        alert("Not enough money!");
-    }
-}
-
-function sellBTC() {
-    money += btc;
-    btc = 0;
-    updateStats();
-}
-
-// ----- ENERGY -----
-function calculateEnergy() {
-    totalEnergy = generators.reduce((sum,g) => sum+g.energy,0);
-}
-
-// ----- UPDATE STATS -----
-function updateStats() {
-    document.getElementById("money").innerText = money.toFixed(2);
-    document.getElementById("btc").innerText = btc.toFixed(2);
-    document.getElementById("platformSlots").innerText = platformSlots;
-    document.getElementById("usedSlots").innerText = usedSlots;
-    calculateEnergy();
-    usedEnergy = gpus.reduce((sum,g) => sum + (g.active?g.energy:0),0);
-    document.getElementById("totalEnergy").innerText = totalEnergy;
-    document.getElementById("usedEnergy").innerText = usedEnergy;
-}
-
-// ----- RENDER PLATFORM -----
-function renderPlatform() {
-    const container = document.getElementById("platform");
-    container.innerHTML = "";
-    gpus.forEach((gpu,i) => {
-        const div = document.createElement("div");
-        div.classList.add("slot");
-        const gpuDiv = document.createElement("div");
-        gpuDiv.classList.add("gpu");
-        div.appendChild(gpuDiv);
-        container.appendChild(div);
-    });
-}
-
-// ----- RENDER GENERATORS -----
-function renderGenerators() {
-    const container = document.getElementById("generators");
-    container.innerHTML = "";
-    generators.forEach(g => {
-        const div = document.createElement("div");
-        div.classList.add("generator");
-        div.innerText = g.energy;
-        container.appendChild(div);
-    });
-}
-
-// ----- GAME LOOP -----
-function gameLoop() {
-    calculateEnergy();
-    gpus.forEach(gpu => {
-        gpu.active = (usedEnergy <= totalEnergy);
-    });
-    let activeGPUs = gpus.filter(g => g.active);
-    let income = activeGPUs.length * gpuIncome / 2; // 0.5 sec loop
-    btc += income;
-    updateStats();
-    setTimeout(gameLoop,500);
-}
-</script>
+<script src="script.js"></script>
 </body>
 </html>
